@@ -1,14 +1,41 @@
 import numpy as np
-import data_tests
 from sklearn import linear_model
 
+if __name__ == "__main__":
+    import data_tests
+else:
+    from modules import data_tests
 # ORDER IS FROM NEWEST (UP) TO OLDEST (DOWN) DATA
 
 
 class ARIMA:
+    """
+    Class ARIMA is used to predict time series data.
+
+    The model combines AR - autoregression and MA - moving averages, 
+    also if the initial data is not stationary it integrates it until so.
+
+    The model is brute-forced, aka it will calculate all the possible models,
+    such as AR1MA2, AR2MA2, AR3MA2 ... AR(lags)MA(lags), then select the one with least historic error.
+
+    ####Params####:
+
+        data: imput data list of variables, starting from newst to oldest data, could be numpy array
+
+        lags: by default 31, could be changed, it determines how much possible lags will be tested. 
+        THE CALCULATION GROW EXPONENTIALLY!
+
+    Every instance of the class will be stored in list current_models (call with any self.current_models)
+    """
     current_models = []
 
     def __init__(self, data, lags=31):
+        """
+        Constructor params(could be invoked):
+        -------------------------------------
+            self.integrations: automated returns the integrations done to make the data stationary
+            *** fill text here**
+        """
         self.current_models.append(self)
         self.integrations = 0
         self.all_models = {}
@@ -181,11 +208,6 @@ class linearProjection:
         predictions = np.array(predictions).reshape(-1, 1)
         t = np.array(t).reshape(-1, 1)
         return {'R': self.rsq, 'periods(t)': t, 'prediction': predictions}
-
-    @ staticmethod
-    def inform():
-        text = 'information'
-        print(text)
 
 
 class _simple_lag:
