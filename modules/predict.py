@@ -12,20 +12,24 @@ class ARIMA:
     """
     Class ARIMA is used to predict time series data.
 
-    The model combines AR - autoregression and MA - moving averages, 
+    The model combines AR - autoregression and MA - moving averages,
     also if the initial data is not stationary it integrates it until so.
 
     The model is brute-forced, aka it will calculate all the possible models,
-    such as AR1MA2, AR2MA2, AR3MA2 ... AR(lags)MA(lags), then select the one with least historic error.
+    such as AR1MA2, AR2MA2, AR3MA2 ... AR(lags)MA(lags),
+    then select the one with least historic error.
 
     ####Params####:
 
-        data: imput data list of variables, starting from newst to oldest data, could be numpy array
+        data: imput data list of variables, starting from newst to oldest data,
+        could be numpy array.
 
-        lags: by default 31, could be changed, it determines how much possible lags will be tested. 
+        lags: by default 31, could be changed,
+        it determines how much possible lags will be tested.
         THE CALCULATION GROW EXPONENTIALLY!
 
-    Every instance of the class will be stored in list current_models (call with any self.current_models)
+    Every instance of the class will be stored in list current_models
+    (call with any self.current_models)
     """
     current_models = []
 
@@ -33,8 +37,25 @@ class ARIMA:
         """
         Constructor params(could be invoked):
         -------------------------------------
-            self.integrations: automated returns the integrations done to make the data stationary
-            *** fill text here**
+            self.integrations: automated - returns the integrations done
+            to make the data stationary.
+
+            self.all_models: stores information on all models solved.
+
+            self.data: input - initial data.
+
+            self.lags: input - lags to be tested.
+
+            self._test_data() and self._turn_to_np() called private methods.
+
+            self.base: generated, backup of the used data, prior numpy.
+
+            self.best_model: generated - returns the best model,
+            after testing all generated.
+
+            self.prediction: generated - returns initial prediction
+            of the found best model.
+
         """
         self.current_models.append(self)
         self.integrations = 0
@@ -43,22 +64,19 @@ class ARIMA:
         self.lags = lags
         self._test_data()
         self._turn_to_np()
-        self.inform()
-        self.best_model = self.build()
         self.prediction = self.predict()
 
     def _test_data(self):
-        # checks stationarity
+        # Private: checks stationarity by calling other module.
         self.integrations, self.data = data_tests.forceSTAT(self.data)
 
     def _turn_to_np(self):
-        ''' transform into numpy array for ease of use and makes a
-        backup of the base data (potentially)'''
+        # Private: transform into numpy array with proper shape/bachup.
         self.data = np.array(self.data).reshape(-1, 1)
         self.base = np.copy(self.data)
 
     def _moving_averages(self, lag):
-        # returns np array list of moving averages
+        # returns np array list of moving averages base on the lag.
         result = []
         for x, _ in enumerate(self.data[lag:]):
             result.append(np.mean(self.data[1+x:lag+x]))
@@ -87,7 +105,11 @@ class ARIMA:
             return {key: spec}
 
     def build(self):
-        # finds the best model
+        '''
+        Trigering the build function solves all models in order to
+        find the best model, by score, then returns it as a result.
+        Also generates self.all_models and self.best to store the information.
+        '''
         for t in range(2, self.lags):
             MA = self._moving_averages(t)
             for t1 in range(1, self.lags):
@@ -102,8 +124,8 @@ class ARIMA:
                             'I'+str(self.integrations) +
                             'MA'+str(t)
                             ] = regresion_values
-        best = self._check_all_models()
-        return best
+        self.best = self._check_all_models()
+        return self.best
 
     def _decode_key(self, key):
         if 'I' in key:
@@ -133,7 +155,21 @@ class ARIMA:
             key = 'broken key'
 
     def predict(self, model='best', periods=31):
-        # retrunt periods t+n .... t and same predictions
+        '''
+        Predict function:
+        -----------------
+        Use to predict expected values for the class, normal use:
+        First use build, then invoke and it will generated 30 predictions.
+        Starting with the most furthest and reachin to the closes (t+30...t+1).
+
+        Params:
+        -------
+            model: default 'best', use the self.best model,
+            could be given specific model.
+            Example AR1MA1 or AR1I1MA1 in that case the function
+            could be triggered prior build and make prediction.
+            ### DATA STILL WILL BE INTEGRATED BY self.integration ###
+        '''
         if model == 'best':
             # Not very pretty but it works, look for more elegant way ... if po
             key = next(iter(self.best_model.keys()))
@@ -157,13 +193,10 @@ class ARIMA:
 
     def __str__(self):
         # print the R2 of the best model and the model itself
-        self.best_model
-
-    @staticmethod
-    def infrom():
-        # show some information about the current class (base functions)
-        text = 'information'
-        print(text)
+        if self.best:
+            self.best_model
+        else:
+            'Model builder'
 
 
 class linearProjection:
