@@ -1,7 +1,5 @@
 #STATISTIC MODULES TIME SERIES
 
-Work in progress
-
 A library of statistical analysis, circling around prediction
 It includes:
 ============
@@ -12,3 +10,5 @@ prediction:
     Linear projection
     AR - under construction
     MA - under construction
+
+work in progress
