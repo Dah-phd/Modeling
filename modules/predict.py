@@ -200,17 +200,53 @@ class ARIMA:
 
 
 class linearProjection:
+    '''
+    Linear projection is modeling the expected values of a timeseries
+    by using as factor the change of the period i.e. (1,2,3,4,5...n).
+
+    current_models (invoked by self.current_models) - lists all instances
+    of the class.
+
+    #######
+    self.build() is used to trigger the solution of the model.
+        generates:
+            self.rsq = score of the model
+            self.intercept = constant queficient
+            self.beta = coeficient of the relation
+        !!! The model dose not consider the possibility of 0 intercept !!!
+
+    self.predict() is used to generate predictions.
+
+    #######
+    Required params:
+
+    data: The input data should include list or numpy array starting
+    with the newest data to the oldest.
+
+    integrate: optional bool, default = False.
+    Determines should predict force stationarity.
+    '''
     current_models = []
 
     def __init__(self, data, integrate=False):
+        '''
+        Constructor params:
+        ------------------
+        self.data: input data - list/np.array
+
+        self.periods: generated, to track lenght of the timeseries
+
+        self.integrations: generated, states the number of
+        integrations if any.
+
+        self._turn_to_np(): private method
+        buils self.base - copy of the initial data.
+        '''
         self.current_models.append(self)
         self.data = data
         self.periods = len(self.data)+1
         self.integrations = 0
         self._turn_to_np(integrate)
-        self.build()
-        self.prediction = self.predict()
-        self.inform()
 
     def _turn_to_np(self, integrate):
         # convert to numpy and makes a backup
@@ -220,6 +256,10 @@ class linearProjection:
         self.base = np.copy(self.data)
 
     def build(self):
+        '''
+        self.build(), no params is used to initialize the solution of the
+        linear model, if not triggered the predict function will automate it.
+        '''
         factor = [t for t in range(1, self.periods)]
         factor.reverse()
         factor = np.array(factor).reshape(-1, 1)
@@ -229,18 +269,30 @@ class linearProjection:
                                                model.intercept_[0],
                                                model.coef_[0][0])
 
-    def predict(self, periods=31):
+    def predict(self, periods=30):
+        '''
+        self.predict is used to generate predictions from the build model,
+        if no model is build it will build it. Also stores the predictions in
+        self.prediction
+
+        Params:
+        periods: int, how long should the prediction be, default is 30 periods
+        '''
+        if not self.rsq:
+            self.build()
         x = self.periods
         t = []
         predictions = []
-        for t in periods:
+        for t in range(periods+1):
             y = x*self.beta+self.intercept
             predictions.insert(0, y)
             t.insert(0, x)
             x += 1
         predictions = np.array(predictions).reshape(-1, 1)
         t = np.array(t).reshape(-1, 1)
-        return {'R': self.rsq, 'periods(t)': t, 'prediction': predictions}
+        self.prediction = {'R': self.rsq,
+                           'periods(t)': t, 'prediction': predictions}
+        return self.prediction
 
 
 class _simple_lag:
