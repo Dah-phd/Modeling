@@ -64,11 +64,11 @@ class ARIMA:
         self.lags = lags
         self._test_data()
         self._turn_to_np()
-        self.prediction = self.predict()
 
     def _test_data(self):
         # Private: checks stationarity by calling other module.
-        self.integrations, self.data = data_tests.forceSTAT(self.data)
+        self.integrations, self.data = data_tests.stationarity.forceSTAT(
+            self.data)
 
     def _turn_to_np(self):
         # Private: transform into numpy array with proper shape/bachup.
@@ -85,21 +85,23 @@ class ARIMA:
     def _equlize(self, AR, t1, MA, t):
         # balances the lenght of imput data
         if t > t1:
-            base = np.array[:-t]
+            base = self.data[:-t]
             AR = AR[:-(t-t1)]
-        elif t1 >= t:
-            base = np.array[:-t1]
+        elif t1 > t:
+            base = self.data[:-t1]
             MA = MA[:-(t1-t)]
+        elif t1 == t:
+            base = self.data[:-t]
         else:
             return 'Somethin went wrong'
-        factor = np.hstack(AR, MA)
+        factor = np.hstack((AR, MA))
         return base, factor
 
     def _check_all_models(self):
         # returns the best model
         key, spec = 'model', {'R': 0}
         for t in self.all_models.items():
-            if spec < t[1]['R']:
+            if spec['R'] < t[1]['R']:
                 key, spec = t[0], t[1]
         if key != 'model':
             return {key: spec}
@@ -172,23 +174,25 @@ class ARIMA:
         '''
         if model == 'best':
             # Not very pretty but it works, look for more elegant way ... if po
-            key = next(iter(self.best_model.keys()))
-            model_dict = self.best_model[key]
+            key = next(iter(self.best.keys()))
+            model_dict = self.best[key]
         else:
             key = self._key_integrity(model)
             model_dict = self.all_models[key]
         AR, MA = self._decode_key(key)
         data = AR if AR > MA else MA
         data = self.data[:data]
-        periods = []
+        print(data)
+        periods_ = []
         for t in range(periods):
-            periods.insert(0, t)
+            periods_.insert(0, t)
             result = data[AR-1]*model_dict['AR'] + \
                 np.mean(data[:MA]*model_dict['MA'])
             data = np.insert(data, 0, result, 0)
-        return {'key': key,
-                'periods(t)': np.array(periods).reshape(-1, 1),
-                'prediction': data[:periods+1]}
+            self.prediction = {'key': key,
+                               'periods(t)': np.array(periods_).reshape(-1, 1),
+                               'prediction': data[:periods+1]}
+        return self.prediction
         # + 1 due to indexing not including final value
 
     def __str__(self):
