@@ -182,7 +182,6 @@ class ARIMA:
         AR, MA = self._decode_key(key)
         data = AR if AR > MA else MA
         data = self.data[:data]
-        print(data)
         periods_ = []
         for t in range(periods):
             periods_.insert(0, t)
@@ -303,7 +302,7 @@ class _simple_lag:
     current_models = []
     # parent class
 
-    def __init__(self, data, lags=30, n_factors=3, integrate=True):
+    def __init__(self, data, n_factors, lags, integrate=True):
         self.current_models.append(self)
         self.data = data
         self.lags = lags+1
@@ -320,19 +319,19 @@ class _simple_lag:
 
     def _check_all_models(self):
         # under the condition that we use dict starting with the model than R
-        self.best = {'model': None, 'R': 0}
-        for t in self.all_models:
-            if t['R'] > self.best['R']:
-                self.best = t
-        if self.best['model'] is None:
-            print('No models to check')
+        key, spec = 'model', {'R': 0}
+        for t in self.all_models.items():
+            if t[1]['R'] > spec['R']:
+                key, spec = t[0], t[1]
+        if key != 'model':
+            return {key: spec}
 
-    def _cascade(self, n, model=''):
+    def _cascade(self, n, m_type, model=''):
         if n >= 1:
-            for t in range(1, self.lags):
-                self._cascade(n-1, model=model+'AR'+str(t))
+            for t in range(2 if m_type == 'MA' else 1, self.lags):
+                self._cascade(n-1, model=model+m_type+str(t), m_type=m_type)
         elif n == 0:
-            model_list = model.split('AR')
+            model_list = model.split(m_type)
             model_list.pop(0)
             model_list = [int(t) for t in model_list]
             factor = np.hstack(
@@ -342,14 +341,13 @@ class _simple_lag:
             )
             base = self.data[:-max(model_list)]
             model_reg = linear_model.LinearRegression().fit(factor, base)
-            self.all_models[model] = {'R': model_reg.score(factor, base)**2,
-                                      'AR' +
-                                      str(model_list[0]): model_reg.coef_[0],
-                                      'AR' +
-                                      str(model_list[1]): model_reg.coef_[1],
-                                      'AR' +
-                                      str(model_list[2]): model_reg.coef_[2],
-                                      'Intercept': model_reg.intercept_}
+            self.all_models[model] = {
+                str(n)+'_'+m_type: t for n, t in enumerate(
+                    model_reg.coef_,
+                    start=1)
+            }
+            self.all_models[model]['Intercept'] = model_reg.intercept_
+            self.all_models[model]['R'] = model_reg.score(factor, base)**2
         else:
             print('n_factors incorrect!')
 
@@ -358,30 +356,72 @@ class AutoReg(_simple_lag):
     # first child using multiple autoregressive factors (3 def)
     # make predictions
     def __init__(self, data, lags=30, n_factors=3, integrate=True):
-        super().__init__(data, lags=30, n_factors=3, integrate=True)
+        super().__init__(data, n_factors, lags, integrate=True)
 
     def _solve(self, lag, max_lenght):
         end = lag-max_lenght if lag != max_lenght else None
         return self.data[lag:end]
 
     def build(self):
-        self._cascade(self.n_factors)
-        self.best = 'a'  # self._check_all_models()
+        self._cascade(self.n_factors, m_type='AR')
+        self.best = self._check_all_models()
         return self.best
+
+    def predict(self, periods=30, model='best'):
+        if model == 'best':
+            key = next(iter(self.best.keys()))
+            spec = self.best[key]
+        else:
+            key = model
+            spec = self.all_models[key]
+        key = key.split('AR')
+        key.pop(0)
+        key = [int(t) for t in key]
+        data = self.data[:self.lags]
+        for t in range(periods+1):
+            base = 0
+            for n, t1 in enumerate(key, start=1):
+                base += spec[str(n)+'_AR']*data[t1-1]
+            data = np.insert(data, 0, base+spec['Intercept'])
+        self.prediction = {model: data[:periods+1],
+                           'periods': 't+n ... t+3, t+2, t+1'}
+        return self.prediction
 
 
 class MovingAvg(_simple_lag):
     # first child using multiple autoregressive factors (3 def)
     # make predictions
     def __init__(self, data, lags=30, n_factors=3, integrate=True):
-        super().__init__(data, lags=30, n_factors=3, integrate=True)
+        super().__init__(data, n_factors, lags, integrate=True)
 
-    def solve(self, lag, max_lenght):
-        end = lag-max_lenght if lag != max_lenght else None
-        print(end)
-        pass
+    def _solve(self, lag, max_lenght):
+        return np.array(
+            [np.mean(
+                self.data[0+t: lag+t]) for t in range(len(
+                    self.data[max_lenght:]))
+             ])
 
     def build(self):
-        self._cascade(self.n_factors)
+        self._cascade(self.n_factors, m_type='MA')
         self.best = self._check_all_models()
         return self.best
+
+    def predict(self, periods=30, model='best'):
+        if model == 'best':
+            key = next(iter(self.best.keys()))
+            spec = self.best[key]
+        else:
+            key = model
+            spec = self.all_models[key]
+        key = key.split('MA')
+        key.pop(0)
+        key = [int(t) for t in key]
+        data = self.data[:self.lags]
+        for t in range(periods+1):
+            base = 0
+            for n, t1 in enumerate(key, start=1):
+                base += spec[str(n)+'_MA']*np.mean(data[0:t1-1])
+            data = np.insert(data, 0, base+spec['Intercept'])
+        self.prediction = {model: data[:periods+1],
+                           'periods': 't+n ... t+3, t+2, t+1'}
+        return self.prediction

@@ -11,4 +11,6 @@ prediction:
     AR - under construction
     MA - under construction
 
-work in progress
+work in progress, plans:
+    ATM all prediction functions are operational but not tested enough
+    so multiple calc could be done at one time, such as solving ARIMA or AutoRs ... etc
