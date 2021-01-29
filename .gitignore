@@ -3,3 +3,4 @@ __pychache__
 venv
 *.pyc
 test.py
+*testsplit.py

@@ -63,17 +63,14 @@ class ARIMA:
         self.data = data
         self.lags = lags
         self._test_data()
-        self._turn_to_np()
 
     def _test_data(self):
         # Private: checks stationarity by calling other module.
+        # Private: transform into numpy array with proper shape/bachup.
+        self.base = np.copy(self.data)
         self.integrations, self.data = data_tests.stationarity.forceSTAT(
             self.data)
-
-    def _turn_to_np(self):
-        # Private: transform into numpy array with proper shape/bachup.
         self.data = np.array(self.data).reshape(-1, 1)
-        self.base = np.copy(self.data)
 
     def _moving_averages(self, lag):
         # returns np array list of moving averages base on the lag.
@@ -155,6 +152,7 @@ class ARIMA:
             key = key[0]+'I'+str(self.integrations)+key[1]
         else:
             key = 'broken key'
+        return key
 
     def predict(self, model='best', periods=31):
         '''
@@ -173,7 +171,6 @@ class ARIMA:
             ### DATA STILL WILL BE INTEGRATED BY self.integration ###
         '''
         if model == 'best':
-            # Not very pretty but it works, look for more elegant way ... if po
             key = next(iter(self.best.keys()))
             model_dict = self.best[key]
         else:
@@ -181,18 +178,22 @@ class ARIMA:
             model_dict = self.all_models[key]
         AR, MA = self._decode_key(key)
         data = AR if AR > MA else MA
+        data = AR if AR > MA else MA
         data = self.data[:data]
-        periods_ = []
+        base = self.base[:self.integrations+1]
         for t in range(periods):
-            periods_.insert(0, t)
+            add = [base[0]]
+            for t in range(self.integrations):
+                add.append(np.diff(base[:t+2]))
             result = data[AR-1]*model_dict['AR'] + \
                 np.mean(data[:MA]*model_dict['MA'])
             data = np.insert(data, 0, result, 0)
+            base = np.insert(base, 0, result+sum(add))
             self.prediction = {'key': key,
-                               'periods(t)': np.array(periods_).reshape(-1, 1),
-                               'prediction': data[:periods+1]}
+                               'periods(t)': 't+n ... t+3, t+2, t+1',
+                               'prediction': data[:periods],
+                               're-integrated': base[:-(self.integrations+1)]}
         return self.prediction
-        # + 1 due to indexing not including final value
 
     def __str__(self):
         # print the R2 of the best model and the model itself
@@ -286,7 +287,7 @@ class LinearProjection:
         x = self.periods
         periods_ = []
         predictions = []
-        for t in range(periods+1):
+        for _ in range(periods+1):
             y = x*self.beta+self.intercept
             predictions.insert(0, y)
             periods_.insert(0, x)
@@ -378,7 +379,7 @@ class AutoReg(_simple_lag):
         key.pop(0)
         key = [int(t) for t in key]
         data = self.data[:self.lags]
-        for t in range(periods+1):
+        for _ in range(periods+1):
             base = 0
             for n, t1 in enumerate(key, start=1):
                 base += spec[str(n)+'_AR']*data[t1-1]
@@ -417,7 +418,7 @@ class MovingAvg(_simple_lag):
         key.pop(0)
         key = [int(t) for t in key]
         data = self.data[:self.lags]
-        for t in range(periods+1):
+        for _ in range(periods+1):
             base = 0
             for n, t1 in enumerate(key, start=1):
                 base += spec[str(n)+'_MA']*np.mean(data[0:t1-1])
