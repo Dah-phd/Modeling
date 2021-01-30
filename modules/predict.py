@@ -33,7 +33,7 @@ class ARIMA:
     """
     current_models = []
 
-    def __init__(self, data, lags=31):
+    def __init__(self, data, lags=30):
         """
         Constructor params(could be invoked):
         -------------------------------------
@@ -61,7 +61,7 @@ class ARIMA:
         self.integrations = 0
         self.all_models = {}
         self.data = data
-        self.lags = lags
+        self.lags = lags+1
         self._test_data()
 
     def _test_data(self):
@@ -331,6 +331,7 @@ class _simple_lag:
         if n >= 1:
             for t in range(2 if m_type == 'MA' else 1, self.lags):
                 self._cascade(n-1, model=model+m_type+str(t), m_type=m_type)
+            return
         elif n == 0:
             model_list = model.split(m_type)
             model_list.pop(0)
