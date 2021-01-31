@@ -1,11 +1,6 @@
 import numpy as np
 from sklearn import linear_model
-
-if __name__ == "__main__":
-    import data_tests
-else:
-    from modules import data_tests
-# ORDER IS FROM NEWEST (UP) TO OLDEST (DOWN) DATA
+from . import data_tests
 
 
 class ARIMA:
