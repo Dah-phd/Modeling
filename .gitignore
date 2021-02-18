@@ -1,6 +1,6 @@
 .vscode
 __pychache__
 venv
-*.pyc
+__pychache__
 test.py
 *testsplit.py

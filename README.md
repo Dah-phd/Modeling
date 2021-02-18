@@ -15,5 +15,4 @@ modules.concurrent:
     for AR, MA models the multiple launch of ProcessPool makes concurrency useless
     
 work in progress, plans:
-    ATM all prediction functions are operational but not tested enough
-    so multiple calc could be done at one time, such as solving ARIMA or AutoRs ... etc
+    working on cython version, mainly for expirience but will be usefull especially for AutoReg and MovingAvg as they get quite time complex

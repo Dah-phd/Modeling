@@ -5,6 +5,11 @@ if __name__ == '__main__':
 else:
     from . import data_tests
 
+cimport numpy as np
+
+DTYPE = np.double
+
+ctypedef np.double_t DTYPE_t
 
 class ARIMA:
     """
@@ -78,6 +83,9 @@ class ARIMA:
         return np.array(result).reshape(-1, 1)
 
     def _equlize(self, AR, t1, MA, t):
+        cdef:
+            int t,
+            int t1
         # balances the lenght of imput data
         if t > t1:
             base = self.data[:-t]
@@ -107,6 +115,8 @@ class ARIMA:
         find the best model, by score, then returns it as a result.
         Also generates self.all_models and self.best to store the information.
         '''
+        cdef int t
+        cdef int t1
         for t in range(2, self.lags):
             MA = self._moving_averages(t)
             for t1 in range(1, self.lags):
@@ -124,12 +134,17 @@ class ARIMA:
         self.best = self._check_all_models()
         return self.best
 
-    def _decode_key(self, key):
+    cdef _decode_key(self, key):
+        cdef:
+            char AR,
+            char MA,
+            int AR_,
+            int MA_
         if 'I' in key:
             AR, MA = key.split('I')
-            AR = int(AR[2:])
-            MA = int(MA.split('MA')[-1])
-            key = (AR, MA)
+            AR_ = int(AR[2:])
+            MA_ = int(MA.split('MA')[-1])
+            key = (AR_, MA_)
         elif 'MA' in key:
             AR, MA = key.split('MA')
             AR
@@ -168,6 +183,9 @@ class ARIMA:
             could be triggered prior build and make prediction.
             ### DATA STILL WILL BE INTEGRATED BY self.integration ###
         '''
+        cdef:
+            int t, 
+            int t1
         if model == 'best':
             key = next(iter(self.best.keys()))
             model_dict = self.best[key]
