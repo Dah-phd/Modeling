@@ -180,13 +180,16 @@ class ARIMA:
         data = self.data[:data]
         base = self.base[:self.integrations+1]
         for t in range(periods):
-            add = [base[0]]
-            for t in range(self.integrations):
-                add.append(np.diff(base[:t+2]))
             result = data[AR-1]*model_dict['AR'] + \
                 np.mean(data[:MA]*model_dict['MA'])
             data = np.insert(data, 0, result, 0)
-            base = np.insert(base, 0, result+sum(add))
+            if self.integrations > 0:
+                add = [base[0]]
+                for t in range(self.integrations):
+                    add.append(np.diff(base[:t+2]))
+                base = np.insert(base, 0, result+sum(add))
+            else:
+                base = np.insert(base, 0, result)
             self.prediction = {'key': key,
                                'periods(t)': 't+n ... t+3, t+2, t+1',
                                'prediction': data[:periods],
