@@ -293,8 +293,6 @@ class LinearProjection:
             predictions.insert(0, y)
             periods_.insert(0, x)
             x += 1
-        predictions = np.array(predictions).reshape(-1, 1)
-        periods_ = np.array(periods_).reshape(-1, 1)
         self.prediction = {'R': self.rsq,
                            'periods(t)': periods_, 'prediction': predictions}
         return self.prediction
