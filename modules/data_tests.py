@@ -57,3 +57,28 @@ class stationarity:
                 return(x, y)
             else:
                 return False, None, None
+
+    @staticmethod
+    def reintegrate(inte, x_legacy, x_integrated):
+        """
+        If you are using integrted datasets, the fuction easily converts data back to normal set.
+        ========================================
+        inte(int): number of integrations.
+        x_legacy(list of float [newst:oldest]): base for the integrated list, it needs another value for every level of integration.
+            If inte=1 needs one datapoint, if inte=2 it will need a scond datapoint (next value).
+        x_integrated(list of float [newst:oldest]) the integrated data.
+        """
+        result = []
+        for x in x_integrated[::-1]:
+            reints = inte
+            base = []
+            data = np.array(x_legacy)
+            while reints > 1:
+                base.append(x_legacy[0])
+                data = np.diff(data)
+                reints -= 1
+            else:
+                new_x = sum(base)+x
+                x_legacy.pop()
+                x_legacy.insert(0, new_x)
+                result.insert(0, new_x)
