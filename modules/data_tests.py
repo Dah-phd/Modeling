@@ -1,5 +1,5 @@
 from statsmodels.tsa.stattools import adfuller
-import numpy as np
+from numpy import array, diff
 
 
 class stationarity:
@@ -15,15 +15,15 @@ class stationarity:
     @staticmethod
     # performs simple integration
     def integration(x):
-        x = np.array(x)
-        x = np.diff(x)
+        x = array(x)
+        x = diff(x)
         return x
 
     @staticmethod
     # reaches stationarity
     def forceSTAT(x, n_integrations=True):
         inte = 0
-        x = np.array(x)
+        x = array(x)
         stat = stationarity.ADF(x)
         while not stat and inte < 6:
             inte += 1
@@ -40,9 +40,9 @@ class stationarity:
     @staticmethod
     def forceSTATxy(x, y, n_integrations=True):
         inte = 0
-        x = np.array(x)
+        x = array(x)
         stat_x = stationarity.ADF(x)
-        y = np.array(y)
+        y = array(y)
         stat_y = stationarity.ADF(y)
         while not stat_x and not stat_y and inte < 6:
             inte += 1
@@ -72,10 +72,10 @@ class stationarity:
         for x in x_integrated[::-1]:
             reints = inte
             base = []
-            data = np.array(x_legacy)
+            data = array(x_legacy)
             while reints > 1:
                 base.append(x_legacy[0])
-                data = np.diff(data)
+                data = diff(data)
                 reints -= 1
             else:
                 new_x = sum(base)+x
