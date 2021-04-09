@@ -2,7 +2,7 @@ import numpy as np
 from sklearn import linear_model
 from concurrent.futures import ProcessPoolExecutor as PPE
 from concurrent.futures import as_completed
-from . import data_tests
+from modules import data_tests
 
 
 class ARIMA:

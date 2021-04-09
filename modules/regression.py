@@ -2,10 +2,7 @@ import numpy as np
 from scipy.stats import f as fdist
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
-if __name__ == '__main__':
-    import data_tests
-else:
-    from . import data_tests
+from modules import data_tests
 
 
 class causality:

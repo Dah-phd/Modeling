@@ -1,9 +1,6 @@
 import numpy as np
 from sklearn import linear_model
-if __name__ == '__main__':
-    import data_tests
-else:
-    from . import data_tests
+from modules import data_tests
 
 
 class ARIMA:
