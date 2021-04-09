@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import f as fdist
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 if __name__ == '__main__':
@@ -30,9 +31,7 @@ class causality:
             self.integrations, self.Y, self.X = data_tests.stationarity.forceSTATxy(
                 self.Y, self.X)
             if not self.integrations:
-                print(self.Y)
                 return
-            print(self.integrations)
         self.result = self.build(test_lags)
         if reverse:
             self.X, self.Y = self.Y, self.X
@@ -40,10 +39,10 @@ class causality:
             self.Y, self.X = self.X, self.Y
 
     def build(self, test_lags):
+        self.results = {}
         for lag in range(1, test_lags+1):
             lag_counts = lag
             passed_lags = 0
-            print(self.Y)
             base = np.copy(self.Y)[:-lag]
             auto_regressor = np.copy(self.Y)[lag:]
             regressor = np.hstack((auto_regressor, self.X[lag:]))
@@ -55,15 +54,37 @@ class causality:
                 regressor = np.hstack(
                     (regressor, self.Y[lag_counts:passed_lags], self.X[lag_counts:passed_lags]))
             # auto_regressor is first!!!
-            # auto_model = OLS(base, auto_regressor, missing='drop')
-            # auto_model.fit()
-            # full_model = OLS(base, regressor, missing='drop')
-            # full_model.fit()
-            print('======', lag, '======')
-            print('Y', base.shape)
-            print('Y-auto', auto_regressor.shape)
-            print('X', regressor.shape)
-            print()
+            auto_model = OLS(
+                base,
+                add_constant(auto_regressor),
+                missing='drop'
+            )
+            full_model = OLS(
+                base,
+                add_constant(regressor),
+                missing='drop'
+            )
+            auto_reg = auto_model.fit()
+            caus_reg = full_model.fit()
+            N = len(base)
+            value = self._test(
+                caus_reg.rsquared, auto_reg.rsquared, N, lag
+            )
+
+            self.results['lag ' + str(lag)] = {
+                'value': value,
+                'causality': True if value < 0.05 else False,
+                'used data points': N,
+                'full-model RSQ': caus_reg.rsquared
+            }
+
+    def _test(self, r_full, r_reduced, N, df):
+        # df is the sama as doubled the lags
+        return 1 - fdist.cdf(
+            (r_full-r_reduced)*(N-df*2-1)/(1-r_full)/df,
+            df,
+            (N-df*2-1)/(1-r_full)
+        )
 
     def fix_data(self):
         self.X = np.array(self.X).reshape(-1, 1)
@@ -86,7 +107,7 @@ def linear_regression(Y, X, alfa=True, fix_nan=True):
         shape = X.shape
         X = X.reshape(shape[1], shape[0])
     if alfa:
-        add_constant(X)
+        X = add_constant(X)
     model = OLS(Y, X, missing='drop' if fix_nan else 'none')
     return model.fit()
 
