@@ -54,9 +54,9 @@ class stationarity:
             if stat_x and stat_y and n_integrations:
                 return (inte, x, y)
             elif stat_x and stat_y:
-                return(x, y)
+                return (x, y)
             else:
-                return False, None, None
+                return (False, 'Unable to integrate X or Y!', 'Unable to integrate X or Y!')
 
     @staticmethod
     def reintegrate(inte, x_legacy, x_integrated):
