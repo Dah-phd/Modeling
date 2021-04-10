@@ -2,7 +2,10 @@ import numpy as np
 from scipy.stats import f as fdist
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
-from modules import data_tests
+try:
+    from TS_analysis.modules import data_tests
+except Exception:
+    from modules import data_tests
 
 
 class causality:
@@ -10,8 +13,8 @@ class causality:
         """
         Solves Grainger causality test to derive if fariable is causing the change in another.
         Data should start from the newst to the oldest observation.
-            Y [list of float or numpy array] - the varaible row that is to be affcted;
-            X [list of float or numpy array] - the factor variable row;
+            Y [list of float or numpy array] - the varaible row that is to be affcted, first value could be label if string;
+            X [list of float or numpy array] - the factor variable row, first value could be label if string;
             self.fit() - builds the model;
             self.result - contains the results;
             (if self.fit(reverse = True)) 
@@ -19,6 +22,7 @@ class causality:
         """
         self.Y = Y
         self.X = X
+        self.YL, self.XL = 'Y', 'X'
 
     def fit(self, test_lags=5, labels_yx=(None, None), integrate=True, reverse=False):
         """
@@ -32,13 +36,12 @@ class causality:
         if integrate:
             self.integrations, self.Y, self.X = data_tests.stationarity.forceSTATxy(
                 self.Y, self.X)
-            if not self.integrations:
+            print(self.integrations)
+            if self.integrations == None:
                 return
         if isinstance(labels_yx, tuple):
             if labels_yx[0] != None and labels_yx[1] != None:
                 self.YL, self.XL = str(labels_yx[0]), str(labels_yx[1])
-            else:
-                self.YL, self.XL = 'Y', 'X'
         self.result = self.build(test_lags)
         if reverse:
             self.X, self.Y = self.Y, self.X
@@ -96,8 +99,27 @@ class causality:
         )
 
     def fix_data(self):
+        if isinstance(self.Y[0], str):
+            self.YL = self.Y[0]
+            self.Y.pop(0)
+        if isinstance(self.X[0], str):
+            self.XL = self.X[0]
+            self.X.pop(0)
         self.X = np.array(self.X).reshape(-1, 1)
         self.Y = np.array(self.Y).reshape(-1, 1)
+
+
+class rolling():
+    """
+    Makes rolling regressions for the dataset, testing changes in
+    beta ceficient,
+    R_squared,
+
+    """
+
+    def __init__(self, Y, X):
+        self.Y = Y
+        self.X = X
 
 
 def linear_regression(Y, X, alfa=True, fix_nan=True):

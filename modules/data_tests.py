@@ -35,7 +35,7 @@ class stationarity:
             elif stat:
                 return x
             else:
-                return False, None
+                return None, 'Unable to integrate X'
 
     @staticmethod
     def forceSTATxy(x, y, n_integrations=True):
@@ -56,7 +56,7 @@ class stationarity:
             elif stat_x and stat_y:
                 return (x, y)
             else:
-                return (False, 'Unable to integrate X or Y!', 'Unable to integrate X or Y!')
+                return (None, 'Unable to integrate X or Y!', 'Unable to integrate X or Y!')
 
     @staticmethod
     def reintegrate(inte, x_legacy, x_integrated):
