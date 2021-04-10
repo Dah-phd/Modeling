@@ -1,4 +1,5 @@
 .vscode
 __pycache__/
 venv
+cython_mod
 test*

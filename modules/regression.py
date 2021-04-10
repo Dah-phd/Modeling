@@ -12,14 +12,19 @@ class causality:
         Data should start from the newst to the oldest observation.
             Y [list of float or numpy array] - the varaible row that is to be affcted;
             X [list of float or numpy array] - the factor variable row;
+            self.fit() - builds the model;
+            self.result - contains the results;
+            (if self.fit(reverse = True)) 
+                self.reversed_xy - contains the results for effects of Y on X, or reversed factor and result
         """
         self.Y = Y
         self.X = X
 
-    def fit(self, test_lags=5, integrate=True, reverse=False):
+    def fit(self, test_lags=5, labels_yx=(None, None), integrate=True, reverse=False):
         """
         Fits the data to the model.
             test_lags [int, default=5] - lags to test for causality;
+            labels_yx [(tuple, string) default=(None,None)] - tuple of two strings - label_y and label_x;
             integrate [boolean, default=True] - integrates data to reach stationarity;
             reverse [boolean, default=False] - test reverse causality.
         """
@@ -29,14 +34,22 @@ class causality:
                 self.Y, self.X)
             if not self.integrations:
                 return
+        if isinstance(labels_yx, tuple):
+            if labels_yx[0] != None and labels_yx[1] != None:
+                self.YL, self.XL = str(labels_yx[0]), str(labels_yx[1])
+            else:
+                self.YL, self.XL = 'Y', 'X'
         self.result = self.build(test_lags)
         if reverse:
             self.X, self.Y = self.Y, self.X
-            self.result_reverse = self.build(test_lags)
+            self.XL, self.YL = self.YL, self.XL
+            self.reversed_xy = self.build(test_lags)
             self.Y, self.X = self.X, self.Y
+            self.XL, self.YL = self.YL, self.XL
 
     def build(self, test_lags):
-        self.results = {}
+        results = {'lags': [], self.XL+' => '+self.YL: [], 'value': [],
+                   'full_model RSQ': [], 'used_datapoints': []}
         for lag in range(1, test_lags+1):
             lag_counts = lag
             passed_lags = 0
@@ -67,13 +80,12 @@ class causality:
             value = self._test(
                 caus_reg.rsquared, auto_reg.rsquared, N, lag
             )
-
-            self.results['lag ' + str(lag)] = {
-                'value': value,
-                'causality': True if value < 0.05 else False,
-                'used data points': N,
-                'full-model RSQ': caus_reg.rsquared
-            }
+            results['lags'].append(lag)
+            results['causality'].append(True if value < 0.05 else False)
+            results['value'].append(value)
+            results['full_model RSQ'].append(caus_reg.rsquared)
+            results['used_datapoints'].append(N)
+        return results
 
     def _test(self, r_full, r_reduced, N, df):
         # df is the sama as doubled the lags
