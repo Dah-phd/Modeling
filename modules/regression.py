@@ -13,11 +13,11 @@ class causality:
         """
         Solves Grainger causality test to derive if fariable is causing the change in another.
         Data should start from the newst to the oldest observation.
-            Y [list of float or numpy array] - the varaible row that is to be affcted, first value could be label if string;
-            X [list of float or numpy array] - the factor variable row, first value could be label if string;
+            Y[list of float or numpy array] - the varaible row that is to be affcted, first value could be label if string;
+            X[list of float or numpy array] - the factor variable row, first value could be label if string;
             self.fit() - builds the model;
             self.result - contains the results;
-            (if self.fit(reverse = True)) 
+            (if self.fit(reverse=True))
                 self.reversed_xy - contains the results for effects of Y on X, or reversed factor and result
         """
         self.Y = Y
@@ -27,16 +27,15 @@ class causality:
     def fit(self, test_lags=5, labels_yx=(None, None), integrate=True, reverse=False):
         """
         Fits the data to the model.
-            test_lags [int, default=5] - lags to test for causality;
-            labels_yx [(tuple, string) default=(None,None)] - tuple of two strings - label_y and label_x;
-            integrate [boolean, default=True] - integrates data to reach stationarity;
-            reverse [boolean, default=False] - test reverse causality.
+            test_lags [int, default= 5] - lags to test for causality;
+            labels_yx [(tuple, string) default = (None, None)] - tuple of two strings - label_y and label_x;
+            integrate [boolean, default= True] - integrates data to reach stationarity;
+            reverse [boolean, default= False] - test reverse causality.
         """
         self.fix_data()
         if integrate:
             self.integrations, self.Y, self.X = data_tests.stationarity.forceSTATxy(
                 self.Y, self.X)
-            print(self.integrations)
             if self.integrations == None:
                 return
         if isinstance(labels_yx, tuple):
@@ -71,22 +70,21 @@ class causality:
                 base,
                 add_constant(auto_regressor),
                 missing='drop'
-            )
+            ).fit()
             full_model = OLS(
                 base,
                 add_constant(regressor),
                 missing='drop'
-            )
-            auto_reg = auto_model.fit()
-            caus_reg = full_model.fit()
+            ).fit()
             N = len(base)
             value = self._test(
-                caus_reg.rsquared, auto_reg.rsquared, N, lag
+                full_model.rsquared, auto_model.rsquared, N, lag
             )
             results['lags'].append(lag)
-            results['causality'].append(True if value < 0.05 else False)
+            results[self.XL+' => ' + self.YL].append(
+                True if value < 0.05 else False)
             results['value'].append(value)
-            results['full_model RSQ'].append(caus_reg.rsquared)
+            results['full_model RSQ'].append(full_model.rsquared)
             results['used_datapoints'].append(N)
         return results
 
@@ -117,17 +115,73 @@ class rolling():
 
     """
 
-    def __init__(self, Y, X):
+    def __init__(self, Y, X, multiple_X=1):
+        """
+        Y [list/array of float] - first value could be label, else it will be called Y;
+        X [list/array of float/list of float] - first value could be label, else it will be X if many X1, X2 ... ;
+        multiple_X [int, default = 1] - if you use list of lists for X, set to number of factors (Xes);
+        """
         self.Y = Y
         self.X = X
+        self.XL, YL = ['X'], 'Y'
+        self.multiple_X = multiple_X
+
+    def fit(self, lenght=40, integrate=True, alfa=False):
+        self.fix_data()
+        self.result = {'R_squared': [], 'N_observations': []}
+        for label in self.XL:
+            self.result[label] = []
+        if alfa:
+            self.result['alfa'] = []
+        position = 0
+        base_Y = self.Y[0:lenght]
+        base_X = self.X[0:lenght]
+        if alfa:
+            base_X = add_constant(base_X)
+        while len(base_X) >= lenght and len(base_Y) == lenght:
+            model = OLS(base_Y, base_X).fit()
+            self.result['R_squared'].append(model.rsquared)
+            position += 1
+            base_Y = self.Y[position:lenght+position]
+            base_X = self.X[position:lenght+position:]
+            if alfa:
+                base_X = add_constant(base_X)
+                for i, label in enumerate(self.XL, start=1):
+                    self.result[label].append(model.params[i])
+                self.result['alfa'].append(model.params[0])
+            else:
+                for i, label in enumerate(self.XL):
+                    self.result[label].append(model.params[i])
+
+    def fix_data(self):
+        if isinstance(self.Y[0], str):
+            self.YL = self.Y[0]
+            self.Y.pop(0)
+        if self.multiple_X == 1:
+            if isinstance(self.X[0], str):
+                self.XL = self.X[0]
+                self.X.pop(0)
+            self.X = np.array(self.X).reshape(-1, 1)
+        else:
+            self._fix_Xes()
+        self.Y = np.array(self.Y).reshape(-1, 1)
+
+    def _fix_Xes(self):
+        self.XL = [('X' + str(x)) for x in range(self.multiple_X)]
+        for x in range(self.multiple_X):
+            if isinstance(self.X[0][0], str):
+                self.XL.append[self.X[0][0]]
+                self.X[0].pop(0)
+        try:
+            self.X = np.array(self.X).reshape(-1, self.multiple_X)
 
 
 def linear_regression(Y, X, alfa=True, fix_nan=True):
     """
     Using a package, it rebuild here for ease of use.
-    It is 100% statsmodels OLS.
-    Y (list[float]) - dependent variable;
-    X ([list[float]|float]) - independent variable;
+    It is 100 % statsmodels OLS.
+    Y(list[float]) - dependent variable;
+    X([list[float] | float]) - independent variable;
     """
     valid = check_X(X, len(Y))
     if not valid:

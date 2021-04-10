@@ -40,16 +40,19 @@ def csv_to_predict(path, model, lags=30, col=0, old_new=False):
     return model
 
 
-def csvs_to_causality(path_Y, path_X, col_Y=0, col_X=0, test_lags=7, result_df=False, verb=True):
+def csvs_to_causality(path_Y, path_X, col_Y=0, col_X=0, test_lags=7, reverse=False, result_df=False, verb=True):
     df_Y = read_csv(path_Y)
     Y = list(df_Y[df_Y.columns[col_Y]])
     df_X = read_csv(path_X)
     X = list(df_X[df_X.columns[col_X]])
-    model = _causality(Y, X, test_lags, verb)
+    model = _causality(Y, X, test_lags, reverse, verb)
     if model == None:
         return 'Data cannot be processed!'
     if result_df:
-        return DataFrame(model.result)
+        if reverse:
+            return DataFrame(model.result), DataFrame(model.reversed_xy)
+        else:
+            return DataFrame(model.result)
     else:
         return model
 
@@ -61,28 +64,28 @@ def csv_to_causality(path,  col=(0, 1), test_lags=7, reverse=False, result_df=Fa
     df = read_csv(path)
     Y = list(df[df.columns[0]])
     X = list(df[df.columns[1]])
-    model = _causality(Y, X, test_lags, verb)
-    if model == None:
+    model = _causality(Y, X, test_lags, reverse, verb)
+    if model == Nonreversee:
         return 'Data cannot be processed!'
     if result_df:
-        return DataFrame(model.result)
+        if reverse:
+            return DataFrame(model.result), DataFrame(model.reversed_xy)
+        else:
+            return DataFrame(model.result)
     else:
         return model
 
 
-def _causality(Y, X, test_lags, verb):
+def _causality(Y, X, test_lags, reverse, verb):
     model = causality(Y, X)
-    model.fit(test_lags=test_lags)
-    print(model.X)
-    print(model.Y)
+    model.fit(test_lags=test_lags, reverse=reverse)
     if model.integrations == None:
         print('COULD NOT INTEGRATE DATA!!')
         return None
     if verb:
         print(model.result)
         if reverse:
-            print()
-            print('REVERSED')
+            print('\n<<</attr:reversed_xy/>>>')
             print(model.reversed_xy)
     return model
 
@@ -93,4 +96,4 @@ if __name__ == '__main__':
         path_X='/home/dah/Documents/3_python_projects/0_ETF_data/used/DAX.csv',
         col_Y=1, col_X=1
     )
-    print(a)
+    dir(a)
