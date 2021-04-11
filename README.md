@@ -4,13 +4,18 @@ A library of statistical analysis, circling around prediction
 It includes:
 ============
 modules.predict:
-    Linear projection
-    Autoregressive model
-    Moving average model
-    ARIMA model
+    Linear projection;
+    Autoregressive model;
+    Moving average model;
+    ARIMA model;
+============
+modules.regression:
+    linear_regression (statsmodel, there for convinience);
+    rolling (Rolling regression), determins changes in the regression statistics over time;
+    causality (Grainger causality test), determines causality in relation and direction;
 
 modules.concurrent:
     ARIMA
     useful only wiht lags over 90 periods
-    for AR, MA models the multiple launch of ProcessPool makes concurrency useless
+    for AR, MA models the multiple time needed to launch ProcessPool makes concurrency useless
     

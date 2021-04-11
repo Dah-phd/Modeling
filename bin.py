@@ -1,9 +1,9 @@
 try:
     from TS_analysis.modules.predict import ARIMA, AutoReg, MovingAvg, LinearProjection
-    from TS_analysis.modules.regression import causality
+    from TS_analysis.modules.regression import causality, rolling, linear_regression
 except Exception:
     from modules.predict import ARIMA, AutoReg, MovingAvg, LinearProjection
-    from modules.regression import causality
+    from modules.regression import causality, rolling, linear_regression
 
 from pandas import read_csv, DataFrame
 
@@ -90,10 +90,45 @@ def _causality(Y, X, test_lags, reverse, verb):
     return model
 
 
-if __name__ == '__main__':
-    a = csvs_to_causality(
-        path_Y='/home/dah/Documents/3_python_projects/0_ETF_data/used/DAX.csv',
+def csv_to_rolling(path_Y, path_X, col_Y=0, col_X=0, length_roll=40, alfa=False, integrate=False, verb=True, result_df=False):
+    '''
+    path_Y [str] - location of csv with affected variable;
+    path_X [str] - location of csv with factor/factors;
+    col_Y [int] - index of the affected variable;
+    col_X [int/tuple of int] - index of the factor variable, or tuple of range of indexes;
+        * (0,1) point to index 0, (0,3) point to indexes 0,1,2;
+    length_roll [int, default=40] - how longshould be a step in the rolling regression;
+    integrate [boolean, False] - should the data be converted to stationary set.
+    '''
+    df_Y = read_csv(path_Y)
+    Y = df_Y[df_Y.columns[col_Y]]
+    df_X = read_csv(path_X)
+    if isinstance(col_X, int):
+        X = df_X[df_X.columns[col_X]]
+        mX = 1
+    else:
+        X = []
+        for i in range(col_X[0], col_X[1]):
+            X.append(df_X[df.columns[i]])
+        mX = col_X[1]-col_X[0]
+    model = rolling(Y, X, multiple_X=mX)
+    model.fit(length=length_roll, alfa=alfa, integrate=integrate)
+    if verb:
+        print(DataFrame(model.result))
+    if result_df:
+        return DataFrame(model.resultc)
+    else:
+        return model
+
+
+def test():
+    a = csv_to_rolling(
+        path_Y='/home/dah/Documents/3_python_projects/0_ETF_data/used/ATX.csv',
         path_X='/home/dah/Documents/3_python_projects/0_ETF_data/used/DAX.csv',
-        col_Y=1, col_X=1
+        col_Y=1, col_X=1, result_df=False, alfa=True
     )
-    dir(a)
+    return a
+
+
+if __name__ == '__main__':
+    _test()

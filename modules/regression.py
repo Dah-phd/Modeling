@@ -8,6 +8,24 @@ except Exception:
     from modules import data_tests
 
 
+def linear_regression(Y, X, multiple_X=1, fix_nan=True, alfa=False, integrate=False):
+    """
+    Using a package, it rebuild here for ease of use.
+    It is 100 % statsmodels OLS.
+    Y(list[float]) - dependent variable;
+    X([list[float] | float]) - independent variable;
+    multiple_X [int, default=1] if there are mutiple factors (Xes), set the number of factor columns
+    """
+    Y = np.array(Y).reshape(-1, 1)
+    X = np.array(X).reshape(-1, multiple_X)
+    if integrate:
+        integrations, Y, X = data_tests.stationarity.forceSTATxy(Y, X)
+    if alfa:
+        X = add_constant(X)
+    model = OLS(Y, X, missing='drop' if fix_nan else 'none').fit()
+    return model if not integrate else (model, integrations)
+
+
 class causality:
     def __init__(self, Y, X):
         """
@@ -126,7 +144,7 @@ class rolling():
         self.XL, YL = ['X'], 'Y'
         self.multiple_X = multiple_X
 
-    def fit(self, lenght=40, integrate=True, alfa=False):
+    def fit(self, length=40, integrate=True, alfa=False):
         self.fix_data()
         self.result = {'R_squared': [], 'N_observations': []}
         for label in self.XL:
@@ -134,16 +152,17 @@ class rolling():
         if alfa:
             self.result['alfa'] = []
         position = 0
-        base_Y = self.Y[0:lenght]
-        base_X = self.X[0:lenght]
+        base_Y = self.Y[0:length]
+        base_X = self.X[0:length]
         if alfa:
             base_X = add_constant(base_X)
-        while len(base_X) >= lenght and len(base_Y) == lenght:
+        while len(base_X) >= length and len(base_Y) == length:
             model = OLS(base_Y, base_X).fit()
             self.result['R_squared'].append(model.rsquared)
+            self.result['N_observations'].append(length)
             position += 1
-            base_Y = self.Y[position:lenght+position]
-            base_X = self.X[position:lenght+position:]
+            base_Y = self.Y[position:length+position]
+            base_X = self.X[position:length+position:]
             if alfa:
                 base_X = add_constant(base_X)
                 for i, label in enumerate(self.XL, start=1):
@@ -172,38 +191,4 @@ class rolling():
             if isinstance(self.X[0][0], str):
                 self.XL.append[self.X[0][0]]
                 self.X[0].pop(0)
-        try:
-            self.X = np.array(self.X).reshape(-1, self.multiple_X)
-
-
-def linear_regression(Y, X, alfa=True, fix_nan=True):
-    """
-    Using a package, it rebuild here for ease of use.
-    It is 100 % statsmodels OLS.
-    Y(list[float]) - dependent variable;
-    X([list[float] | float]) - independent variable;
-    """
-    valid = check_X(X, len(Y))
-    if not valid:
-        return False
-    if valid == 'stack':
-        Y = np.array(Y).reshape(-1, 1)
-        X = np.array(X)
-        shape = X.shape
-        X = X.reshape(shape[1], shape[0])
-    if alfa:
-        X = add_constant(X)
-    model = OLS(Y, X, missing='drop' if fix_nan else 'none')
-    return model.fit()
-
-
-def check_X(X, values):
-    if isinstance(X[0], list):
-        if len(X[0]) == values:
-            return 'stack'
-    elif len(X) != values:
-        return False
-    return True
-
-    # class dummy var regression
-    # class rolling regression
+        self.X = np.array(self.X).reshape(-1, self.multiple_X)
