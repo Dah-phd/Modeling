@@ -3,9 +3,9 @@ from scipy.stats import f as fdist
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 try:
-    from TS_analysis.modules import data_tests
+    from TS_analysis import data_tests
 except Exception:
-    from modules import data_tests
+    import data_tests
 
 
 def linear_regression(Y, X, multiple_X=1, fix_nan=True, alfa=False, integrate=False):

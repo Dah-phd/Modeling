@@ -1,10 +1,5 @@
-try:
-    from TS_analysis.modules.predict import ARIMA, AutoReg, MovingAvg, LinearProjection
-    from TS_analysis.modules.regression import causality, rolling, linear_regression
-except Exception:
-    from modules.predict import ARIMA, AutoReg, MovingAvg, LinearProjection
-    from modules.regression import causality, rolling, linear_regression
-
+from predict import ARIMA, AutoReg, MovingAvg, LinearProjection
+from regression import causality, rolling, linear_regression
 from pandas import read_csv, DataFrame
 
 

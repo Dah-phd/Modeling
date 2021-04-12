@@ -1,9 +1,9 @@
 import numpy as np
 from sklearn import linear_model
 try:
-    from TS_analysis.modules import data_tests
+    from TS_analysis import data_tests
 except Exception:
-    from modules import data_tests
+    import data_tests
 
 
 class ARIMA:
