@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn import linear_model
 try:
-    from TS_analysis import data_tests
+    from . import data_tests
 except Exception:
     import data_tests
 

@@ -3,7 +3,7 @@ from scipy.stats import f as fdist
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 try:
-    from TS_analysis import data_tests
+    from . import data_tests
 except Exception:
     import data_tests
 
