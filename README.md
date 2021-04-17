@@ -10,8 +10,8 @@ prediction models:
     Autoregressive model;
     Moving average model;
     ARIMA model;
-regression models:
 
+regression models:
     linear_regression (statsmodel, there for convinience);
     rolling (Rolling regression), determins changes in the regression statistics over time;
     causality (Grainger causality test), determines causality in relation and direction;
