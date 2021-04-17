@@ -2,19 +2,18 @@
 
 A library of statistical analysis, circling around prediction
 
-
 It includes:
 
-prediction models:
-    Linear projection;
-    Autoregressive model;
-    Moving average model;
-    ARIMA model;
+prediction models:\n
+    \tLinear projection;\n
+    \tAutoregressive model;\n
+    \tMoving average model;\n
+    \tARIMA model;\n
 
-regression models:
-    linear_regression (statsmodel, there for convinience);
-    rolling (Rolling regression), determins changes in the regression statistics over time;
-    causality (Grainger causality test), determines causality in relation and direction;
+regression models:\n
+    \tlinear_regression (statsmodel, there for convinience);\n
+    \trolling (Rolling regression), determins changes in the regression statistics over time;\n
+    \tcausality (Grainger causality test), determines causality in relation and direction;\n
 
 modules.concurrent:
     ARIMA
