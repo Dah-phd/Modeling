@@ -1,15 +1,17 @@
 #STATISTIC MODULES TIME SERIES
 
 A library of statistical analysis, circling around prediction
+
+
 It includes:
-============
-modules.predict:
+
+prediction models:
     Linear projection;
     Autoregressive model;
     Moving average model;
     ARIMA model;
-============
-modules.regression:
+regression models:
+
     linear_regression (statsmodel, there for convinience);
     rolling (Rolling regression), determins changes in the regression statistics over time;
     causality (Grainger causality test), determines causality in relation and direction;
