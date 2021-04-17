@@ -1,19 +1,21 @@
-#STATISTIC MODULES TIME SERIES
+# STATISTIC MODULES TIME SERIES
 
 A library of statistical analysis, circling around prediction
 
+* The bin.py file is a form of combination of all modules, it also icludes few csv related functions. *
+
 It includes:
 
-prediction models:\n
-    \tLinear projection;\n
-    \tAutoregressive model;\n
-    \tMoving average model;\n
-    \tARIMA model;\n
+**prediction models:**
+    * Linear projection;
+    * tAutoregressive model;
+    * tMoving average model;
+    * ARIMA model;
 
-regression models:\n
-    \tlinear_regression (statsmodel, there for convinience);\n
-    \trolling (Rolling regression), determins changes in the regression statistics over time;\n
-    \tcausality (Grainger causality test), determines causality in relation and direction;\n
+**regression models:**
+    * linear_regression (statsmodel, there for convinience);
+    * rolling (Rolling regression), determins changes in the regression statistics over time;
+    * causality (Grainger causality test), determines causality in relation and direction;
 
 modules.concurrent:
     ARIMA
