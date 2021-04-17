@@ -2,20 +2,20 @@
 
 A library of statistical analysis, circling around prediction
 
-* The bin.py file is a form of combination of all modules, it also icludes few csv related functions. *
+*The bin.py file is a form of combination of all modules, it also icludes few csv related functions.*
 
 It includes:
 
 **prediction models:**
-    * Linear projection;
-    * tAutoregressive model;
-    * tMoving average model;
-    * ARIMA model;
+* Linear projection;
+* tAutoregressive model;
+* tMoving average model;
+* ARIMA model;
 
 **regression models:**
-    * linear_regression (statsmodel, there for convinience);
-    * rolling (Rolling regression), determins changes in the regression statistics over time;
-    * causality (Grainger causality test), determines causality in relation and direction;
+* linear_regression (statsmodel, there for convinience);
+* rolling (Rolling regression), determins changes in the regression statistics over time;
+* causality (Grainger causality test), determines causality in relation and direction;
 
 modules.concurrent:
     ARIMA
